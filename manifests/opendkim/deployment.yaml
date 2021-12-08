@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opendkim
+  name: opendkim
+  namespace: mail
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: opendkim
+  template:
+    metadata:
+      labels:
+        app: opendkim
+    spec:
+      containers:
+      - name: opendkim
+        image: 556005419303.dkr.ecr.us-east-1.amazonaws.com/k8s/opendkim:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8892
+          name: opendkim
+          protocol: TCP
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8892
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 8892
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /etc/opendkim/mail
+          name: mailtxt
+          readOnly: true
+          subPath: mail
+        - mountPath: /etc/opendkim/mail.txt
+          name: mailtxt
+          readOnly: true
+          subPath: mail.txt
+      nodeSelector:
+        lifecycle: spot
+      volumes:
+      - name: mailtxt
+        secret:
+          secretName: mail.txt

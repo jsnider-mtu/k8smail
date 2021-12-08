@@ -1,0 +1,237 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postfix
+  namespace: mail
+data:
+  main.cf: |
+    smtpd_banner = $myhostname ESMTP
+    append_dot_mydomain = no
+    readme_directory = no
+    smtpd_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+    smtpd_tls_ciphers = high
+    smtpd_tls_cert_file = /etc/ssl/private/chain2021.pem
+    smtpd_tls_key_file = /etc/ssl/private/tinyhippo.ninja.2021.key
+    smtpd_use_tls = yes
+    smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache
+    smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
+    smtpd_tls_loglevel = 1
+    smtpd_tls_security_level = may
+    smtpd_tls_session_cache_timeout = 3600s
+    smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
+    myhostname = tinyhippo.ninja
+    alias_maps = hash:/etc/aliases
+    alias_database = hash:/etc/aliases
+    myorigin = /etc/mailname
+    mydestination = localhost.localdomain, localhost
+    relayhost = 
+    mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+    mailbox_command = /usr/lib/dovecot/deliver -c /etc/dovecot/dovecot.conf -m "${EXTENSION}"
+    mailbox_size_limit = 0
+    recipient_delimiter = +
+    inet_interfaces = all
+    inet_protocols = all
+    home_mailbox = Maildir/
+    smtpd_sasl_auth_enable = yes
+    smtpd_sasl_type = dovecot
+    smtpd_sasl_path = private/dovecot-auth
+    smtpd_sasl_authenticated_header = yes
+    smtpd_sasl_security_options = noanonymous
+    smtpd_sasl_local_domain = $myhostname
+    broken_sasl_auth_clients = yes
+    smtpd_recipient_restrictions = reject_unknown_client_hostname, reject_unknown_sender_domain, reject_unknown_recipient_domain, reject_unauth_pipelining, permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination, reject_invalid_hostname, reject_non_fqdn_sender
+    smtpd_sender_restrictions = permit_sasl_authenticated, reject_unknown_sender_domain, reject_sender_login_mismatch
+    smtp_use_tls = yes
+    smtpd_tls_received_header = yes
+    smtpd_tls_mandatory_protocols = !SSLv3, TLSv1
+    smtpd_tls_mandatory_ciphers = medium
+    smtpd_tls_auth_only = yes
+    tls_random_source = dev:/dev/urandom
+    smtpd_sender_login_maps = $virtual_mailbox_maps
+    unknown_address_reject_code = 550
+    unknown_hostname_reject_code = 550
+    unknown_client_reject_code = 550
+    canonical_maps = hash:/etc/postfix/canonical
+    home_mailbox = Maildir/
+    message_size_limit = 104857600
+    virtual_alias_maps = hash:/etc/postfix/virtual
+    virtual_mailbox_domains = hash:/etc/postfix/virtual-mailbox-domains
+    virtual_mailbox_maps = hash:/etc/postfix/virtual-mailbox-users
+    virtual_transport = dovecot
+    dovecot_destination_recipient_limit = 1
+    default_destination_concurrency_limit = 5
+    disable_vrfy_command = yes
+    relay_destination_concurrency_limit = 1
+    smtp_tls_note_starttls_offer = yes
+    smtp_tls_security_level = may
+    smtpd_milters = inet:opendkim.mail.svc.cluster.local:8892
+    maillog_file = /var/log/mail.log
+  master.cf: |
+    smtp       inet  n       -       n       -       -       smtpd
+    submission inet  n       -       n       -       -       smtpd
+    pickup     unix  n       -       y       60      1       pickup
+    cleanup    unix  n       -       y       -       0       cleanup
+    qmgr      unix  n       -       n       300     1       qmgr
+    tlsmgr     unix  -       -       y       1000?   1       tlsmgr
+    rewrite    unix  -       -       y       -       -       trivial-rewrite
+    bounce     unix  -       -       y       -       0       bounce
+    defer      unix  -       -       y       -       0       bounce
+    trace      unix  -       -       y       -       0       bounce
+    verify     unix  -       -       y       -       1       verify
+    flush      unix  n       -       y       1000?   0       flush
+    proxymap  unix  -       -       n       -       -       proxymap
+    proxywrite unix -       -       n       -       1       proxymap
+    smtp       unix  -       -       y       -       -       smtp
+    relay      unix  -       -       y       -       -       smtp
+    showq      unix  n       -       y       -       -       showq
+    error      unix  -       -       y       -       -       error
+    retry      unix  -       -       y       -       -       error
+    discard    unix  -       -       y       -       -       discard
+    local     unix  -       n       n       -       -       local
+    virtual   unix  -       n       n       -       -       virtual
+    lmtp       unix  -       -       y       -       -       lmtp
+    anvil      unix  -       -       y       -       1       anvil
+    scache     unix  -       -       y       -       1       scache
+    postlog   unix-dgram n  -       n       -       1       postlogd
+    maildrop  unix  -       n       n       -       -       pipe
+      flags=DRhu user=vmail argv=/usr/bin/maildrop -d ${recipient}
+    uucp      unix  -       n       n       -       -       pipe
+      flags=Fqhu user=uucp argv=uux -r -n -z -a$sender - $nexthop!rmail ($recipient)
+    ifmail    unix  -       n       n       -       -       pipe
+      flags=F user=ftn argv=/usr/lib/ifmail/ifmail -r $nexthop ($recipient)
+    bsmtp     unix  -       n       n       -       -       pipe
+      flags=Fq. user=bsmtp argv=/usr/lib/bsmtp/bsmtp -t$nexthop -f$sender $recipient
+    scalemail-backend unix	-	n	n	-	2	pipe
+      flags=R user=scalemail argv=/usr/lib/scalemail/bin/scalemail-store ${nexthop} ${user} ${extension}
+    mailman   unix  -       n       n       -       -       pipe
+      flags=FR user=list argv=/usr/lib/mailman/bin/postfix-to-mailman.py
+      ${nexthop} ${user}
+    dovecot   unix  -       n       n       -       -       pipe
+      flags=DRhu user=vmail:vmail argv=/usr/lib/dovecot/deliver
+      -f ${sender} -d ${recipient}
+  canonical: |
+    www-data@tinyhippo.ninja postasaurus@tinyhippo.ninja
+  virtual: |
+    @tinyhippo.ninja                        afsa@tinyhippo.ninja
+    admin@tinyhippo.ninja                   afsa@tinyhippo.ninja
+    afsa@tinyhippo.ninja                    afsa@tinyhippo.ninja
+    jsnider@tinyhippo.ninja                 afsa@tinyhippo.ninja
+    postasaurus@tinyhippo.ninja             afsa@tinyhippo.ninja
+    webmaster@tinyhippo.ninja               afsa@tinyhippo.ninja
+    root@tinyhippo.ninja                    afsa@tinyhippo.ninja
+    abuse@tinyhippo.ninja                   afsa@tinyhippo.ninja
+    raven@tinyhippo.ninja                   afsa@tinyhippo.ninja
+    reminder@tinyhippo.ninja                afsa@tinyhippo.ninja
+  virtual-mailbox-domains: |
+    tinyhippo.ninja      OK
+  virtual-mailbox-users: |
+    afsa@tinyhippo.ninja                afsa@tinyhippo.ninja
+    postasaurus@tinyhippo.ninja         postasaurus@tinyhippo.ninja
+    webmaster@tinyhippo.ninja           webmaster@tinyhippo.ninja
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dovecot
+  namespace: mail
+data:
+  dovecot.conf: |
+    !include_try /usr/share/dovecot/protocols.d/*.protocol
+    !include conf.d/*.conf
+    !include_try local.conf
+    verbose_ssl = yes
+  10-master.conf: |
+    service imap-login {
+      inet_listener imap {
+      }
+      inet_listener imaps {
+      }
+    }
+    service pop3-login {
+      inet_listener pop3 {
+      }
+      inet_listener pop3s {
+      }
+    }
+    service lmtp {
+      unix_listener lmtp {
+      }
+    }
+    service imap {
+    }
+    service pop3 {
+    }
+    service auth {
+      unix_listener auth-userdb {
+      }
+    }
+    service auth-worker {
+    }
+    service dict {
+      unix_listener dict {
+      }
+    }
+    service stats {
+      unix_listener stats-reader {
+        user = vmail
+        group = dovecot
+        mode = 0660
+      }
+      unix_listener stats-writer {
+        user = vmail
+        group = dovecot
+        mode = 0660
+      }
+    }
+  99-mail-stack-delivery.conf: |
+    protocols = imap
+    disable_plaintext_auth = yes
+    ssl = yes
+    ssl_cert = </etc/ssl/private/chain2021.pem
+    ssl_key = </etc/ssl/private/tinyhippo.ninja.2021.key
+    ssl_client_ca_dir = /etc/ssl/certs
+    ssl_cipher_list = ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:ECDH+3DES:DH+3DES:RSA+AES:RSA+3DES:!ADH:!AECDH:!MD5:!DSS
+    mail_home = /var/mail/vmail/%d/%n
+    mail_location = maildir:/var/mail/vmail/%d/%n/mail:LAYOUT=fs
+    auth_username_chars = abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_@
+    protocol imap {
+            mail_max_userip_connections = 10
+            imap_client_workarounds = delay-newmail tb-extra-mailbox-sep
+            ssl_cert = </etc/ssl/private/chain2021.pem
+            ssl_key = </etc/ssl/private/tinyhippo.ninja.2021.key
+    }
+    protocol lda {
+            postmaster_address = postasaurus@tinyhippo.ninja
+            quota_full_tempfail = yes
+            deliver_log_format = msgid=%m: %$
+            rejection_reason = Your message to <%t> was automatically rejected:%n%r
+    }
+    auth_mechanisms = plain login
+    userdb {
+        driver = static
+        args = uid=vmail gid=vmail home=/var/mail/vmail/%d/%n
+    }
+    passdb {
+        driver = passwd-file
+        args = username_format=%u scheme=ssha512 /etc/dovecot/passwd.db
+        deny = no
+        master = no
+        pass = no
+        skip = never
+        result_failure = continue
+        result_internalfail = continue
+        result_success = return-ok
+    }
+    auth_verbose=yes
+    service auth {
+      unix_listener /var/spool/postfix/private/dovecot-auth {
+        mode = 0660
+        user = postfix
+        group = postfix
+      }
+    }
+    log_path = /var/log/mail.log
+  auth-system.conf.ext: |
+    #passdb {
+    #  driver = pam
+    #}

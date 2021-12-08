@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: mail
+  name: mail
+spec:
+  volumeMode: Filesystem
+  volumeName: pvc-665cb1a2-b5cf-4f66-89c6-744de19f8473
+  accessModes:
+  - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 10Gi

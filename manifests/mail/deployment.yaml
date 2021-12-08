@@ -1,0 +1,120 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mail
+  name: mail
+  namespace: mail
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mail
+  template:
+    metadata:
+      labels:
+        app: mail
+    spec:
+      containers:
+      - name: mail
+        image: 556005419303.dkr.ecr.us-east-1.amazonaws.com/k8s/mail:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 25
+          name: smtp
+          protocol: TCP
+        - containerPort: 143
+          name: imap
+          protocol: TCP
+        - containerPort: 587
+          name: smtpsub
+          protocol: TCP
+        - containerPort: 993
+          name: imaps
+          protocol: TCP
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 25
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 25
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /etc/postfix/main.cf
+          name: postfix
+          subPath: main.cf
+        - mountPath: /etc/postfix/master.cf
+          name: postfix
+          subPath: master.cf
+        - mountPath: /etc/postfix/canonical
+          name: postfix
+          subPath: canonical
+        - mountPath: /etc/postfix/virtual
+          name: postfix
+          subPath: virtual
+        - mountPath: /etc/postfix/virtual-mailbox-domains
+          name: postfix
+          subPath: virtual-mailbox-domains
+        - mountPath: /etc/postfix/virtual-mailbox-users
+          name: postfix
+          subPath: virtual-mailbox-users
+        - mountPath: /etc/dovecot/dovecot.conf
+          name: dovecot-conf
+          subPath: dovecot.conf
+        - mountPath: /etc/dovecot/conf.d/10-master.conf
+          name: dovecot-conf
+          subPath: 10-master.conf
+        - mountPath: /etc/dovecot/conf.d/99-mail-stack-delivery.conf
+          name: dovecot-conf
+          subPath: 99-mail-stack-delivery.conf
+        - mountPath: /etc/dovecot/conf.d/auth-system.conf.ext
+          name: dovecot-conf
+          subPath: auth-system.conf.ext
+        - mountPath: /etc/dovecot/passwd.db
+          name: dovecot-passwd
+          readOnly: true
+          subPath: passwd.db
+        - mountPath: /etc/ssl/private/chain2021.pem
+          name: tls
+          readOnly: true
+          subPath: chain2021.pem
+        - mountPath: /etc/ssl/private/tinyhippo.ninja.2021.key
+          name: tls
+          readOnly: true
+          subPath: tinyhippo.ninja.2021.key
+        - mountPath: /var/mail/vmail
+          name: vmail
+      nodeSelector:
+        lifecycle: spot
+      volumes:
+      - name: postfix
+        configMap:
+          name: postfix
+      - name: dovecot-conf
+        configMap:
+          name: dovecot
+      - name: dovecot-passwd
+        secret:
+          secretName: passwd.db
+      - name: tls
+        secret:
+          secretName: tls
+      - name: vmail
+        persistentVolumeClaim:
+          claimName: mail
