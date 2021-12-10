@@ -13,7 +13,7 @@ data:
     
     # Options
     # See man spamd for possible options. The -d option is automatically added.
-    OPTIONS="-x --max-children 5 --helper-home-dir ${SAHOME} -u spamd -g spamd --siteconfigpath ${SAGLOBALCFGPATH} -i 0.0.0.0 -s /var/log/spamd.log"
+    OPTIONS="-x --max-children 5 -A 10. --helper-home-dir ${SAHOME} -u spamd -g spamd --siteconfigpath ${SAGLOBALCFGPATH} --socketpath=/var/run/spamd.sock --socketowner=spamd --socketgroup=spamd --socketmode=0660 -s /var/log/spamd.log"
     
     # Pid file
     # Where should spamd write its PID to file? If you use the -u or
@@ -26,4 +26,5 @@ data:
     # spamassassin's rules on a nightly basis
     CRON=1
   spamass-milter: |
-    OPTIONS="-u spamass-milter -i 127.0.0.1 -m -I -- -d localhost"
+    SOCKET="inet:783@0.0.0.0"
+    OPTIONS="-u spamass-milter -i 127.0.0.1 -m -I -- --socket=/var/run/spamd.sock"

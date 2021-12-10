@@ -64,7 +64,7 @@ data:
     relay_destination_concurrency_limit = 1
     smtp_tls_note_starttls_offer = yes
     smtp_tls_security_level = may
-    smtpd_milters = inet:opendkim.mail.svc.cluster.local:8892
+    smtpd_milters = inet:opendkim.mail.svc.cluster.local:8892 inet:spamass.mail.svc.cluster.local:783
     maillog_file = /var/log/mail.log
   master.cf: |
     smtp       inet  n       -       n       -       -       smtpd
