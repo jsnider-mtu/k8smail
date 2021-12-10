@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: spamass
+  name: spamass
+  namespace: mail
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spamass
+  template:
+    metadata:
+      labels:
+        app: spamass
+    spec:
+      containers:
+      - name: spamass
+        image: 556005419303.dkr.ecr.us-east-1.amazonaws.com/k8s/spamass:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 783
+          name: spamass
+          protocol: TCP
+        livenessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 783
+          timeoutSeconds: 1
+        readinessProbe:
+          failureThreshold: 10
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: 783
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /etc/default/spamassassin
+          name: spamass
+          subPath: spamassassin
+        - mountPath: /etc/default/spamass-milter
+          name: spamass
+          subPath: spamass-milter
+      nodeSelector:
+        lifecycle: spot
+      volumes:
+      - name: spamass
+        configMap:
+          name: spamass
