@@ -21,7 +21,8 @@ metadata:
   namespace: mail
 data:
   main.cf: |
-    smtpd_banner = $myhostname ESMTP
+    smtpd_banner = ec2-3-218-55-144.compute-1.amazonaws.com ec2-54-205-22-141.compute-1.amazonaws.com ec2-52-1-21-39.compute-1.amazonaws.com ESMTP
+    #smtpd_banner = $myhostname ESMTP
     append_dot_mydomain = no
     readme_directory = no
     smtpd_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
@@ -84,7 +85,7 @@ data:
     maillog_file = /var/log/mail.log
   master.cf: |
     smtp       inet  n       -       n       -       -       smtpd
-    submission inet  n       -       n       -       -       smtpd -v
+    submission inet  n       -       n       -       -       smtpd
     pickup     unix  n       -       y       60      1       pickup
     cleanup    unix  n       -       y       -       0       cleanup
     qmgr      unix  n       -       n       300     1       qmgr
