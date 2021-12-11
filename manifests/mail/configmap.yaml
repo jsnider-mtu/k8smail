@@ -221,6 +221,7 @@ data:
             ssl_cert = </etc/ssl/private/chain2021.pem
             ssl_key = </etc/ssl/private/tinyhippo.ninja.2021.key
     }
+    mail_plugins = $mail_plugins lazy_expunge
     protocol lda {
             mail_plugins = sieve
             postmaster_address = postasaurus@tinyhippo.ninja
@@ -255,6 +256,7 @@ data:
       }
     }
     plugin {
+      lazy_expunge = Trash
       sieve=~/.dovecot.sieve
       sieve_dir=~/sieve
       sieve_before = /etc/dovecot/sieve-before
