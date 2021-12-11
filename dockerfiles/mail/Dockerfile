@@ -9,7 +9,7 @@ EXPOSE 993
 EXPOSE 4190
 
 RUN apt-get update && apt-get upgrade -y
-RUN apt-get install -y mail-stack-delivery postfix dovecot-imapd
+RUN apt-get install -y mail-stack-delivery postfix dovecot-imapd dovecot-sieve dovecot-managesieved
 
 RUN touch /var/log/mail.log
 RUN chmod 666 /var/log/mail.log

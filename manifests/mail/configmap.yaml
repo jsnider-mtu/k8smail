@@ -201,7 +201,9 @@ data:
       }
     }
   99-mail-stack-delivery.conf: |
-    protocols = imap
+    protocols = imap sieve
+    log_path = /var/log/mail.log
+    #mail_debug = yes
     disable_plaintext_auth = yes
     ssl = yes
     ssl_cert = </etc/ssl/private/chain2021.pem
@@ -211,6 +213,8 @@ data:
     mail_home = /var/mail/vmail/%d/%n
     mail_location = maildir:/var/mail/vmail/%d/%n/mail:LAYOUT=fs
     auth_username_chars = abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890.-_@
+    managesieve_notify_capability = mailto
+    managesieve_sieve_capability = fileinto reject envelope encoded-character vacation subaddress comparator-i;ascii-numeric relational regex imap4flags copy include variables body enotify environment mailbox date ihave
     protocol imap {
             mail_max_userip_connections = 10
             imap_client_workarounds = delay-newmail tb-extra-mailbox-sep
@@ -218,10 +222,13 @@ data:
             ssl_key = </etc/ssl/private/tinyhippo.ninja.2021.key
     }
     protocol lda {
+            mail_plugins = sieve
             postmaster_address = postasaurus@tinyhippo.ninja
             quota_full_tempfail = yes
             deliver_log_format = msgid=%m: %$
             rejection_reason = Your message to <%t> was automatically rejected:%n%r
+            log_path = /var/log/mail.log
+            info_log_path = /var/log/mail.log
     }
     auth_mechanisms = plain login
     userdb {
@@ -247,8 +254,26 @@ data:
         group = postfix
       }
     }
-    log_path = /var/log/mail.log
+    plugin {
+      sieve=~/.dovecot.sieve
+      sieve_dir=~/sieve
+      sieve_before = /etc/dovecot/sieve-before
+      sieve_after = /etc/dovecot/sieve-after
+    }
   auth-system.conf.ext: |
     #passdb {
     #  driver = pam
     #}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sieve-after
+  namespace: mail
+data:
+  spam-to-junk: |
+    require ["fileinto","mailbox"];
+    if header :contains "X-Spam-Flag" "YES" {
+      fileinto :create "Junk";
+      stop;
+    }

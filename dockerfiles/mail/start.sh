@@ -17,6 +17,14 @@ for x in services localtime resolv.conf hosts nsswitch.conf; do
   cp /etc/${x} /var/spool/postfix/etc/
 done
 
+mkdir /etc/dovecot/sieve-after
+
+for x in $(ls /etc/dovecot/sieve-after-config); do
+  sievec /etc/dovecot/sieve-after-config/${x} /etc/dovecot/sieve-after/${x}.svbin
+  chmod 644 /etc/dovecot/sieve-after/${x}.svbin
+  cp /etc/dovecot/sieve-after-config/${x} /etc/dovecot/sieve-after/${x}.sieve
+done
+
 /usr/sbin/postfix start
 /usr/sbin/dovecot
 

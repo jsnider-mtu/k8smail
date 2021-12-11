@@ -86,6 +86,8 @@ spec:
         - mountPath: /etc/dovecot/conf.d/auth-system.conf.ext
           name: dovecot-conf
           subPath: auth-system.conf.ext
+        - mountPath: /etc/dovecot/sieve-after-config
+          name: sieve-after
         - mountPath: /etc/dovecot/passwd.db
           name: dovecot-passwd
           readOnly: true
@@ -109,6 +111,9 @@ spec:
       - name: dovecot-conf
         configMap:
           name: dovecot
+      - name: sieve-after
+        configMap:
+          name: sieve-after
       - name: dovecot-passwd
         secret:
           secretName: passwd.db
