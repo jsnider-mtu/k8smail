@@ -47,13 +47,11 @@ spec:
             cpu: 100m
             memory: 256Mi
         volumeMounts:
-        - mountPath: /etc/opendkim/mail
+        - mountPath: /etc/opendkim/secretmail
           name: mailtxt
-          readOnly: true
           subPath: mail
         - mountPath: /etc/opendkim/mail.txt
           name: mailtxt
-          readOnly: true
           subPath: mail.txt
       nodeSelector:
         lifecycle: spot
