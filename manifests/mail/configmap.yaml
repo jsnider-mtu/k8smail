@@ -40,9 +40,9 @@ data:
     alias_maps = hash:/etc/aliases
     alias_database = hash:/etc/aliases
     myorigin = /etc/mailname
-    mydestination = localhost.localdomain, localhost
+    mydestination = localhost.localdomain, localhost, $myhostname
     relayhost = 
-    mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128
+    mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 10.0.0.0/16
     mailbox_command = /usr/lib/dovecot/deliver -c /etc/dovecot/dovecot.conf -m "${EXTENSION}"
     mailbox_size_limit = 0
     recipient_delimiter = +
