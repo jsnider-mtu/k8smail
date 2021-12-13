@@ -200,6 +200,29 @@ data:
         mode = 0660
       }
     }
+  15-mailboxes.conf: |
+    namespace inbox {
+      mailbox Drafts {
+        special_use = \Drafts
+        auto = subscribe
+      }
+      mailbox Junk {
+        special_use = \Junk
+        auto = subscribe
+      }
+      mailbox Sent {
+        special_use = \Sent
+        auto = subscribe
+      }
+      mailbox "Sent Messages" {
+        special_use = \Sent
+      }
+      mailbox Trash {
+        special_use = \Trash
+        auto = subscribe
+        autoexpunge = 60d
+      }
+    }
   99-mail-stack-delivery.conf: |
     protocols = imap sieve
     log_path = /var/log/mail.log

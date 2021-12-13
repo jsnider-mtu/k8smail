@@ -34,7 +34,7 @@ spec:
           protocol: TCP
         livenessProbe:
           failureThreshold: 10
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 5
           successThreshold: 1
           tcpSocket:
@@ -42,7 +42,7 @@ spec:
           timeoutSeconds: 1
         readinessProbe:
           failureThreshold: 10
-          initialDelaySeconds: 30
+          initialDelaySeconds: 10
           periodSeconds: 5
           successThreshold: 1
           tcpSocket:
@@ -80,6 +80,9 @@ spec:
         - mountPath: /etc/dovecot/conf.d/10-master.conf
           name: dovecot-conf
           subPath: 10-master.conf
+        - mountPath: /etc/dovecot/conf.d/15-mailboxes.conf
+          name: dovecot-conf
+          subPath: 15-mailboxes.conf
         - mountPath: /etc/dovecot/conf.d/99-mail-stack-delivery.conf
           name: dovecot-conf
           subPath: 99-mail-stack-delivery.conf
