@@ -209,6 +209,7 @@ data:
       mailbox Junk {
         special_use = \Junk
         auto = subscribe
+        autoexpunge = 1h
       }
       mailbox Sent {
         special_use = \Sent
@@ -220,7 +221,7 @@ data:
       mailbox Trash {
         special_use = \Trash
         auto = subscribe
-        autoexpunge = 60d
+        autoexpunge = 7d
       }
     }
   99-mail-stack-delivery.conf: |
